@@ -1,22 +1,58 @@
 import { Duration, Stack, StackProps } from 'aws-cdk-lib';
+import {Table, AttributeType} from 'aws-cdk-lib/aws-dynamodb';
 import { Construct } from 'constructs';
 import * as lambda from 'aws-cdk-lib/aws-lambda';
 import * as apigateway from 'aws-cdk-lib/aws-apigateway';
+
 
 export class SwiftByteCdkStack extends Stack {
   constructor(scope: Construct, id: string, props?: StackProps) {
     super(scope, id, props);
 
-    const lambdaFunction = new lambda.Function(this, 'SwiftByteCdkLambda', {
+    const dynamoTable = new Table(this, 'SwiftByteCdkTable', {
+      partitionKey: { name: 'id', type: AttributeType.STRING },
+      sortKey: {name: 'dataClass', type: AttributeType.STRING},
+    });
+
+    const getLambda = new lambda.Function(this, 'SwiftByteCdkLambdaGet', {
       runtime: lambda.Runtime.NODEJS_LATEST,
       code: lambda.Code.fromAsset('./src/lambda/DynamoRead'),
       handler: 'index.handler',
+      environment: {
+        TABLE_NAME: dynamoTable.tableName,
+      }
     });
 
+    const postLambda = new lambda.Function(this, 'SwiftByteCdkLambdaPost', {
+      runtime: lambda.Runtime.NODEJS_LATEST,
+      code: lambda.Code.fromAsset('./src/lambda/DynamoCreate'),
+      handler: 'index.handler',
+      environment: {
+        TABLE_NAME: dynamoTable.tableName,
+      }
+    });
+
+    const updateLambda = new lambda.Function(this, 'SwiftByteCdkLambdaUpdate', {
+      runtime: lambda.Runtime.NODEJS_LATEST,
+      code: lambda.Code.fromAsset('./src/lambda/DynamoUpdate'),
+      handler: 'index.handler',
+      environment: {
+        TABLE_NAME: dynamoTable.tableName,
+      }
+    });
+
+    dynamoTable.grantReadData(getLambda);
+    dynamoTable.grantReadWriteData(postLambda);
+    dynamoTable.grantReadWriteData(updateLambda);
+
     const api = new apigateway.RestApi(this, 'SwiftByteCdkApi');
-    const integration = new apigateway.LambdaIntegration(lambdaFunction);
-    const resource = api.root.addResource('myresource');
-    resource.addMethod('GET', integration);
+
+    const getLambdaIntegration = new apigateway.LambdaIntegration(getLambda);
+    const postLambdaIntegration = new apigateway.LambdaIntegration(postLambda);
+    const updateLambdaIntegration = new apigateway.LambdaIntegration(updateLambda);
+    api.root.addMethod('GET', getLambdaIntegration);
+    api.root.addMethod('POST', postLambdaIntegration);
+    api.root.addMethod('PUT', updateLambdaIntegration);
 
   }
 }
