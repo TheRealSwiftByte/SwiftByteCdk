@@ -50,9 +50,27 @@ export class SwiftByteCdkStack extends Stack {
     const getLambdaIntegration = new apigateway.LambdaIntegration(getLambda);
     const postLambdaIntegration = new apigateway.LambdaIntegration(postLambda);
     const updateLambdaIntegration = new apigateway.LambdaIntegration(updateLambda);
-    api.root.addMethod('GET', getLambdaIntegration);
-    api.root.addMethod('POST', postLambdaIntegration);
-    api.root.addMethod('PUT', updateLambdaIntegration);
+
+    const customerResource = api.root.addResource('customer');
+    customerResource.addMethod('GET', getLambdaIntegration);
+    customerResource.addMethod('POST', postLambdaIntegration);
+    customerResource.addMethod('PUT', updateLambdaIntegration);
+
+    const orderResource = api.root.addResource('order');
+    orderResource.addMethod('GET', getLambdaIntegration);
+    orderResource.addMethod('POST', postLambdaIntegration);
+    orderResource.addMethod('PUT', updateLambdaIntegration);
+
+    const restaurantResource = api.root.addResource('restaurant');
+    restaurantResource.addMethod('GET', getLambdaIntegration);
+    restaurantResource.addMethod('POST', postLambdaIntegration);
+    restaurantResource.addMethod('PUT', updateLambdaIntegration);
+
+    const MenuItemResource = restaurantResource.addResource('menuitem');
+    MenuItemResource.addMethod('GET', getLambdaIntegration);
+    MenuItemResource.addMethod('POST', postLambdaIntegration);
+    MenuItemResource.addMethod('PUT', updateLambdaIntegration);
+
 
   }
 }

@@ -9,6 +9,8 @@ export async function handler(event: APIGatewayProxyEvent): Promise<APIGatewayPr
         console.log('Processing event: ', event);
         const eventPayload = event;
 
+        const path = eventPayload.path;
+        console.log('Path: ', path);
         const queryParamaters = eventPayload.queryStringParameters;
 
         if (!queryParamaters){ 
