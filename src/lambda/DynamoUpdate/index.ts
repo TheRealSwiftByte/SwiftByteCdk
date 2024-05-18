@@ -18,6 +18,23 @@ export async function handler(event: APIGatewayProxyEvent): Promise<APIGatewayPr
                 body: 'Invalid request',
             };
         }
+        if (!queryStringParameters.id) {
+            return {
+                statusCode: 400,
+                body: 'No id provided',
+            };
+        }
+        if (!event.body) {
+            return {
+                statusCode: 400,
+                body: 'No body provided, unknown data to update',
+            };
+        }
+
+
+        const resource = event.resource;
+        const dataClass = resource.replace(/\/+/g, "").toLowerCase();
+        console.log('Path clean:', dataClass);
 
         const client = new DynamoDBClient({ region: 'ap-southeast-2' });
 
@@ -28,7 +45,7 @@ export async function handler(event: APIGatewayProxyEvent): Promise<APIGatewayPr
                         TableName: TABLE_NAME,
                         Key: {
                             id: { S: queryStringParameters.id || '1' },
-                            dataClass: { S: queryStringParameters.dataClass || 'default' },
+                            dataClass: { S: dataClass || 'default' },
                         },
                         UpdateExpression: 'set #data = :data',
                         ExpressionAttributeNames: {

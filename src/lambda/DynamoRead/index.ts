@@ -5,19 +5,21 @@ const TABLE_NAME = process.env.TABLE_NAME || '';
 
 export async function handler(event: APIGatewayProxyEvent): Promise<APIGatewayProxyResult> {
     try {
-        // Process the request here
         console.log('Processing event: ', event);
         const eventPayload = event;
-
-        const path = eventPayload.path;
-        console.log('Path: ', path);
+        const pathUrl = eventPayload.path;
         const queryParamaters = eventPayload.queryStringParameters;
 
         if (!queryParamaters){ 
             throw new Error('No query parameters provided');
         }
+        if(!queryParamaters.id){
+            throw new Error('No id provided');
+        }
         
-        console.log('Query Parameters: ', queryParamaters);
+        const resource = event.resource;
+        const dataClass = resource.replace(/\/+/g, "").toLowerCase();
+        console.log('Path clean:', dataClass);
 
         const client = new DynamoDBClient({ region: 'ap-southeast-2' });
 
@@ -28,13 +30,13 @@ export async function handler(event: APIGatewayProxyEvent): Promise<APIGatewayPr
                         TableName: TABLE_NAME,
                         Key: {
                             id: { S: queryParamaters.id ?? '1' },
-                            dataClass: { S: queryParamaters.dataClass ?? 'default' },
+                            dataClass: { S: dataClass ?? 'default' },
                         },
                     }
                 }
             ]
         };
-
+        
         const results = await client.send(new TransactGetItemsCommand(readCommandInput));
 
         if (results.$metadata.httpStatusCode !== 200) {
@@ -52,11 +54,7 @@ export async function handler(event: APIGatewayProxyEvent): Promise<APIGatewayPr
         // Return an error response
         return {
             statusCode: 500,
-            body: JSON.stringify({ message: 'Internal Server Error' }),
+            body: JSON.stringify({ message: 'Internal Server Error: ' + error}),
         };
     }
 }
-
-/**
- * 
- */

@@ -6,15 +6,33 @@ const TABLE_NAME = process.env.TABLE_NAME || '';
 export async function handler(event: APIGatewayProxyEvent, context: Context): Promise<APIGatewayProxyResult> {
     try {
         console.log('Received event:', JSON.stringify(event));
-
         if (event.httpMethod !== 'POST') {
             return {
                 statusCode: 400,
                 body: JSON.stringify({ message: 'Invalid HTTP method' }),
             };
         }
+        if (!event.body) {
+            return {
+                statusCode: 400,
+                body: JSON.stringify({ message: 'No body provided' }),
+            };
+        }
+
         const requestBody = JSON.parse(event.body || '{"message": "No body"}');
+
+        if (!requestBody.id) {
+            return {
+                statusCode: 400,
+                body: JSON.stringify({ message: 'No id provided' }),
+            };
+        }
+
         console.log('Received payload:', JSON.stringify(requestBody));
+
+        const resource = event.resource;
+        const dataClass = resource.replace(/\/+/g, "").toLowerCase();
+        console.log('Path clean:', dataClass);
 
         const client = new DynamoDBClient({ region: 'ap-southeast-2' });
 
@@ -25,7 +43,7 @@ export async function handler(event: APIGatewayProxyEvent, context: Context): Pr
                         TableName: TABLE_NAME,
                         Item: {
                             id: { S: requestBody.id },
-                            dataClass: { S: requestBody.dataClass || 'default' },
+                            dataClass: { S: dataClass || 'default' },
                             data: { S: requestBody.data || 'default'},
                         },
                     },

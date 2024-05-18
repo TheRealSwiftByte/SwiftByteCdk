@@ -66,10 +66,10 @@ export class SwiftByteCdkStack extends Stack {
     restaurantResource.addMethod('POST', postLambdaIntegration);
     restaurantResource.addMethod('PUT', updateLambdaIntegration);
 
-    const MenuItemResource = restaurantResource.addResource('menuitem');
-    MenuItemResource.addMethod('GET', getLambdaIntegration);
-    MenuItemResource.addMethod('POST', postLambdaIntegration);
-    MenuItemResource.addMethod('PUT', updateLambdaIntegration);
+    // const MenuItemResource = restaurantResource.addResource('menuitem');
+    // MenuItemResource.addMethod('GET', getLambdaIntegration);
+    // MenuItemResource.addMethod('POST', postLambdaIntegration);
+    // MenuItemResource.addMethod('PUT', updateLambdaIntegration);
 
 
   }
