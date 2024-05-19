@@ -51,6 +51,16 @@ export class SwiftByteCdkStack extends Stack {
     });
     dynamoTable.grantReadData(CustomerSignInLambda);
 
+    const GetOrderByCustomerIdLambda = new lambda.Function(this, 'SwiftByteCdkLambdaGetOrderById', {
+      runtime: lambda.Runtime.NODEJS_LATEST,
+      code: lambda.Code.fromAsset('./src/lambda/GetOrderByCustomerId'),
+      handler: 'index.handler',
+      environment: {
+        TABLE_NAME: dynamoTable.tableName,
+      }
+    });
+    dynamoTable.grantReadData(GetOrderByCustomerIdLambda);
+
     dynamoTable.grantReadData(getLambda);
     dynamoTable.grantReadWriteData(postLambda);
     dynamoTable.grantReadWriteData(updateLambda);
@@ -61,6 +71,7 @@ export class SwiftByteCdkStack extends Stack {
     const postLambdaIntegration = new apigateway.LambdaIntegration(postLambda);
     const updateLambdaIntegration = new apigateway.LambdaIntegration(updateLambda);
     const CustomerSignInLambdaIntegration = new apigateway.LambdaIntegration(CustomerSignInLambda);
+    const GetOrderByCustomerIdLambdaIntegration = new apigateway.LambdaIntegration(GetOrderByCustomerIdLambda);
 
     const customerResource = api.root.addResource('customer');
     customerResource.addMethod('GET', getLambdaIntegration);
@@ -71,6 +82,9 @@ export class SwiftByteCdkStack extends Stack {
     orderResource.addMethod('GET', getLambdaIntegration);
     orderResource.addMethod('POST', postLambdaIntegration);
     orderResource.addMethod('PUT', updateLambdaIntegration);
+
+    const orderByIdResource = orderResource.addResource('fetch');
+    orderByIdResource.addMethod('GET', GetOrderByCustomerIdLambdaIntegration);
 
     const restaurantResource = api.root.addResource('restaurant');
     restaurantResource.addMethod('GET', getLambdaIntegration);
