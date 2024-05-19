@@ -1,7 +1,15 @@
 import { APIGatewayProxyEvent, APIGatewayProxyResult, Context } from 'aws-lambda';
-import { DynamoDBClient, TransactWriteItemsCommand, TransactWriteItemsCommandInput } from '@aws-sdk/client-dynamodb';
+import { DynamoDBClient, TransactWriteItem, TransactWriteItemsCommand, TransactWriteItemsCommandInput } from '@aws-sdk/client-dynamodb';
+import { CreateCustomerInput, CreateOrderInput, CreateRestaurantInput, CreateReviewInput, Customer, Order, Restaurant, Review } from '../../types';
 
 const TABLE_NAME = process.env.TABLE_NAME || '';
+
+const CreateFunctionGenerator = {
+    "customer": createCustomer,
+    "order": createOrder,
+    "restaurant": createRestaurant,
+    "review": createReview,
+};
 
 export async function handler(event: APIGatewayProxyEvent, context: Context): Promise<APIGatewayProxyResult> {
     try {
@@ -21,18 +29,35 @@ export async function handler(event: APIGatewayProxyEvent, context: Context): Pr
 
         const requestBody = JSON.parse(event.body || '{"message": "No body"}');
 
-        if (!requestBody.id) {
-            return {
-                statusCode: 400,
-                body: JSON.stringify({ message: 'No id provided' }),
-            };
-        }
-
         console.log('Received payload:', JSON.stringify(requestBody));
 
         const resource = event.resource;
         const dataClass = resource.replace(/\/+/g, "").toLowerCase();
-        console.log('Path clean:', dataClass);
+        const CreateFunction = CreateFunctionGenerator[dataClass as keyof typeof CreateFunctionGenerator];
+
+        if (!CreateFunction) {
+            return {
+                statusCode: 400,
+                body: JSON.stringify({ message: 'Invalid data class' }),
+            };
+        }
+
+        const transactItem: TransactWriteItem = {
+            Put: {
+                TableName: TABLE_NAME,
+                Item: {
+                    id: { S: requestBody.id },
+                    dataClass: { S: dataClass || 'default' },
+                },
+            },
+        };
+
+        const createdObject = CreateFunction(requestBody);
+        const objectToDynamo = ObjectToDynamo(createdObject);
+        objectToDynamo.id = { S: createdObject.id };
+        objectToDynamo.dataClass = { S: dataClass };
+
+        console.log('Object to write:', objectToDynamo);
 
         const client = new DynamoDBClient({ region: 'ap-southeast-2' });
 
@@ -41,11 +66,7 @@ export async function handler(event: APIGatewayProxyEvent, context: Context): Pr
                 {
                     Put: {
                         TableName: TABLE_NAME,
-                        Item: {
-                            id: { S: requestBody.id },
-                            dataClass: { S: dataClass || 'default' },
-                            data: { S: requestBody.data || 'default'},
-                        },
+                        Item: objectToDynamo,
                     },
                 },
             ],
@@ -70,7 +91,106 @@ export async function handler(event: APIGatewayProxyEvent, context: Context): Pr
 
         return {
             statusCode: 500,
-            body: JSON.stringify({ message: 'Internal server error' }),
+            body: JSON.stringify({ message: 'Internal server error', error: error }),
         };
     }
+}
+
+function createCustomer(inputObject: CreateCustomerInput): Customer {
+    return {
+        id: Math.random().toString(36).substring(2, 8),
+        firstName: inputObject.firstName || 'default',
+        lastName: inputObject.lastName || 'default',
+        email: inputObject.email || 'default',
+        phone: inputObject.phone || 'default',
+        address: inputObject.address || 'default',
+        password: inputObject.password || 'default',
+    } as Customer
+}
+
+function createOrder(inputObject: CreateOrderInput): Order {
+    const outputObject: Order = {
+
+        id: Math.random().toString(36).substring(2, 8),
+        customerId: inputObject.customerId || 'default',
+        restaurantId: inputObject.restaurantId || 'default',
+        items: inputObject.items || [],
+        status: inputObject.status || 'default',
+        total: inputObject.total || -1,
+        orderDate: Date.now(),
+        deliveryInstruction: inputObject.deliveryInstruction || 'default',
+        deliveryAddress: inputObject.deliveryAddress || 'default',
+    };
+    if (inputObject.payment) {
+        outputObject.payment = inputObject.payment;
+    }
+    return outputObject;
+}
+
+function createRestaurant(inputObject: CreateRestaurantInput): Restaurant {
+    return {
+        id: Math.random().toString(36).substring(2, 8),
+        name: inputObject.name || 'default',
+        categories: inputObject.categories || [],
+        address: inputObject.address || 'default',
+        phone: inputObject.phone || 'default',
+        description: inputObject.description || 'default',
+        menu: inputObject.menu || [], //should be checking if all menu items but oh well
+        averageRating: inputObject.averageRating || -1,
+        averageWaitTime: inputObject.averageWaitTime || -1,
+    } as Restaurant;
+}
+
+function createReview(inputObject: CreateReviewInput): Review {
+    return {
+        id: Math.random().toString(36).substring(2, 8),
+        customerId: inputObject.customerId || 'default',
+        restaurantId: inputObject.restaurantId || 'default',
+        rating: inputObject.rating || -1,
+        comment: inputObject.comment || 'default',
+        createdAt: Date.now(),
+    } as Review;
+}
+
+
+function ObjectToDynamo(obj: any): any {
+    let result: Record<string, any> = {};
+    for (const key in obj) {
+        if (obj.hasOwnProperty(key)) {
+            const element = obj[key];
+            if (typeof element === 'string') {
+                result[key] = { S: element };
+            } else if (typeof element === 'number') {
+                result[key] = { N: element.toString() };
+            } else if (typeof element === 'boolean') {
+                result[key] = { BOOL: element };
+            } else if (Array.isArray(element)) {
+                result[key] = { L: element.map((item: any) => ObjectToDynamo(item)) };
+            } else if (typeof element === 'object') {
+                result[key] = { M: ObjectToDynamo(element) };
+            }
+        }
+    }
+    return result;
+}
+
+function DynamoToObject(dynamo:any):any {
+    let result: Record<string, any> = {};
+    for (const key in dynamo) {
+        if (dynamo.hasOwnProperty(key)) {
+            const element = dynamo[key];
+            if (element.S) {
+                result[key] = element.S;
+            } else if (element.N) {
+                result[key] = Number(element.N);
+            } else if (element.BOOL) {
+                result[key] = element.BOOL;
+            } else if (element.L) {
+                result[key] = element.L.map((item: any) => DynamoToObject(item));
+            } else if (element.M) {
+                result[key] = DynamoToObject(element.M);
+            }
+        }
+    }
+    return result;
 }

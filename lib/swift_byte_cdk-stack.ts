@@ -41,6 +41,16 @@ export class SwiftByteCdkStack extends Stack {
       }
     });
 
+    const CustomerSignInLambda = new lambda.Function(this, 'SwiftByteCdkLambdaCustomerSignIn', {
+      runtime: lambda.Runtime.NODEJS_LATEST,
+      code: lambda.Code.fromAsset('./src/lambda/CustomerSignIn'),
+      handler: 'index.handler',
+      environment: {
+        TABLE_NAME: dynamoTable.tableName,
+      }
+    });
+    dynamoTable.grantReadData(CustomerSignInLambda);
+
     dynamoTable.grantReadData(getLambda);
     dynamoTable.grantReadWriteData(postLambda);
     dynamoTable.grantReadWriteData(updateLambda);
@@ -50,6 +60,7 @@ export class SwiftByteCdkStack extends Stack {
     const getLambdaIntegration = new apigateway.LambdaIntegration(getLambda);
     const postLambdaIntegration = new apigateway.LambdaIntegration(postLambda);
     const updateLambdaIntegration = new apigateway.LambdaIntegration(updateLambda);
+    const CustomerSignInLambdaIntegration = new apigateway.LambdaIntegration(CustomerSignInLambda);
 
     const customerResource = api.root.addResource('customer');
     customerResource.addMethod('GET', getLambdaIntegration);
@@ -65,6 +76,9 @@ export class SwiftByteCdkStack extends Stack {
     restaurantResource.addMethod('GET', getLambdaIntegration);
     restaurantResource.addMethod('POST', postLambdaIntegration);
     restaurantResource.addMethod('PUT', updateLambdaIntegration);
+
+    const CustomerSignInResource = customerResource.addResource('SignIn');
+    CustomerSignInResource.addMethod('GET', CustomerSignInLambdaIntegration);
 
     // const MenuItemResource = restaurantResource.addResource('menuitem');
     // MenuItemResource.addMethod('GET', getLambdaIntegration);
