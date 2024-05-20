@@ -111,7 +111,7 @@ function createOrder(inputObject: CreateOrderInput): Order {
         customerId: inputObject.customerId || 'default',
         restaurantId: inputObject.restaurantId || 'default',
         items: inputObject.items || [],
-        status: inputObject.status || 'default',
+        orderStatus: inputObject.orderStatus || 'default',
         totalPrice: inputObject.totalPrice || -1,
         orderDate: Date.now(),
         deliveryInstruction: inputObject.deliveryInstruction || 'default',

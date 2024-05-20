@@ -25,6 +25,7 @@ export type CreateCustomerInput = {
 }
 
 export type UpdateCustomerInput = {
+    id?: string;
     firstName?: string;
     lastName?: string;
     email?: string;
@@ -59,7 +60,7 @@ export type Order = {
     customerId: string
     restaurantId: string
     items: MenuItem[]
-    status: "pending" | "accepted" | "declined" | "completed" | "cancelled" | "new" | "default" //default is for an errored state, should be deprecated
+    orderStatus: "pending" | "accepted" | "declined" | "completed" | "cancelled" | "new" | "default" //default is for an errored state, should be deprecated
     totalPrice: number
     orderDate: number
     payment?: Payment
@@ -71,7 +72,7 @@ export type CreateOrderInput = {
     customerId: string
     restaurantId: string
     items: MenuItem[]
-    status: "pending" | "accepted" | "declined" | "completed" | "cancelled" | "new" | "default" //default is for an errored state, should be deprecated
+    orderStatus: "pending" | "accepted" | "declined" | "completed" | "cancelled" | "new" | "default" //default is for an errored state, should be deprecated
     totalPrice: number
     deliveryInstruction: string
     deliveryAddress: string
@@ -79,10 +80,11 @@ export type CreateOrderInput = {
 }
 
 export type UpdateOrderInput = {
+    id?:string
     customerId?: string
     restaurantId?: string
     items?: MenuItem[]
-    status?: "pending" | "accepted" | "declined" | "completed" | "cancelled" | "new" | "default" //default is for an errored state, should be deprecated
+    orderStatus?: "pending" | "accepted" | "declined" | "completed" | "cancelled" | "new" | "default" //default is for an errored state, should be deprecated
     totalPrice?: number
     deliveryInstruction?: string
     deliveryAddress?: string
@@ -142,6 +144,7 @@ export type CreateRestaurantInput = {
 }
 
 export type UpdateRestaurantInput = {
+    id?: string;
     name?: string;
     address?: string;
     phone?: string;
@@ -169,6 +172,7 @@ export type CreateReviewInput = {
 }
 
 export type UpdateReviewInput = {
+    id?: string;
     customerId?: string;
     restaurantId?: string;
     rating?: number;
