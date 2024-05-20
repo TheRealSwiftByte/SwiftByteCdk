@@ -42,22 +42,12 @@ export async function handler(event: APIGatewayProxyEvent, context: Context): Pr
             };
         }
 
-        const transactItem: TransactWriteItem = {
-            Put: {
-                TableName: TABLE_NAME,
-                Item: {
-                    id: { S: requestBody.id },
-                    dataClass: { S: dataClass || 'default' },
-                },
-            },
-        };
-
         const createdObject = CreateFunction(requestBody);
         const objectToDynamo = ObjectToDynamo(createdObject);
         objectToDynamo.id = { S: createdObject.id };
         objectToDynamo.dataClass = { S: dataClass };
 
-        console.log('Object to write:', objectToDynamo);
+        console.log('Object to write:', JSON.stringify(objectToDynamo));
 
         const client = new DynamoDBClient({ region: 'ap-southeast-2' });
 
@@ -71,21 +61,27 @@ export async function handler(event: APIGatewayProxyEvent, context: Context): Pr
                 },
             ],
         };
-
         const writeCommand = new TransactWriteItemsCommand(writeCommandInput);
-        const result = await client.send(writeCommand);
+        console.log("Write Command: ", writeCommand);
 
-        console.log('Result:', JSON.stringify(result));
-
-        if (result.$metadata.httpStatusCode !== 200) {
-            throw new Error('Internal server error when writing to table: ' + JSON.stringify(result));
+        try {
+            const result = await client.send(writeCommand);
+            console.log('Result:', JSON.stringify(result));
+            if (result.$metadata.httpStatusCode !== 200) {
+                throw new Error('Internal server error when writing to table: ' + JSON.stringify(result));
+            }
+            return {
+                statusCode: 200,
+                body: JSON.stringify(createdObject),
+            };
+        } catch (error) {
+            console.error('Error sending to dynamo table:', error);
+            return {
+                statusCode: 500,
+                body: JSON.stringify({ message: 'Internal server error triggered when writing to dynamo table', error: error }),
+            };
         }
-
-
-        return {
-            statusCode: 200,
-            body: JSON.stringify(createdObject),
-        };
+        
     } catch (error) {
         console.error('Error:', error);
 
@@ -116,7 +112,7 @@ function createOrder(inputObject: CreateOrderInput): Order {
         restaurantId: inputObject.restaurantId || 'default',
         items: inputObject.items || [],
         status: inputObject.status || 'default',
-        total: inputObject.total || -1,
+        totalPrice: inputObject.totalPrice || -1,
         orderDate: Date.now(),
         deliveryInstruction: inputObject.deliveryInstruction || 'default',
         deliveryAddress: inputObject.deliveryAddress || 'default',

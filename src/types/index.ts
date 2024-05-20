@@ -1,6 +1,6 @@
 export type Cart = {
     items?: MenuItem[]
-    total?: number
+    totalPrice?: number
 }
 
 export type Customer = {
@@ -20,6 +20,16 @@ export type CreateCustomerInput = {
     email: string;
     phone: string;
     password: string;
+    address?: string;
+    cart?: Cart;
+}
+
+export type UpdateCustomerInput = {
+    firstName?: string;
+    lastName?: string;
+    email?: string;
+    phone?: string;
+    password?: string;
     address?: string;
     cart?: Cart;
 }
@@ -50,7 +60,7 @@ export type Order = {
     restaurantId: string
     items: MenuItem[]
     status: "pending" | "accepted" | "declined" | "completed" | "cancelled" | "new" | "default" //default is for an errored state, should be deprecated
-    total: number
+    totalPrice: number
     orderDate: number
     payment?: Payment
     deliveryInstruction: string
@@ -62,9 +72,20 @@ export type CreateOrderInput = {
     restaurantId: string
     items: MenuItem[]
     status: "pending" | "accepted" | "declined" | "completed" | "cancelled" | "new" | "default" //default is for an errored state, should be deprecated
-    total: number
+    totalPrice: number
     deliveryInstruction: string
     deliveryAddress: string
+    payment?: Payment
+}
+
+export type UpdateOrderInput = {
+    customerId?: string
+    restaurantId?: string
+    items?: MenuItem[]
+    status?: "pending" | "accepted" | "declined" | "completed" | "cancelled" | "new" | "default" //default is for an errored state, should be deprecated
+    totalPrice?: number
+    deliveryInstruction?: string
+    deliveryAddress?: string
     payment?: Payment
 }
 
@@ -120,6 +141,17 @@ export type CreateRestaurantInput = {
     averageWaitTime?: number;
 }
 
+export type UpdateRestaurantInput = {
+    name?: string;
+    address?: string;
+    phone?: string;
+    description?: string;
+    menu?: MenuItem[];
+    categories?: FoodCategory[];
+    averageRating?: number;
+    averageWaitTime?: number;
+}
+
 export type Review = {
     id: string;
     customerId: string;
@@ -134,4 +166,11 @@ export type CreateReviewInput = {
     restaurantId: string;
     rating: number;
     comment: string;
+}
+
+export type UpdateReviewInput = {
+    customerId?: string;
+    restaurantId?: string;
+    rating?: number;
+    comment?: string;
 }
