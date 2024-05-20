@@ -77,6 +77,8 @@ export async function handler(event: APIGatewayProxyEvent): Promise<APIGatewayPr
             ],
         };
 
+        console.log('Update item input:', JSON.stringify(updateItemInput));
+
         try {
             const results = await client.send(new TransactWriteItemsCommand(updateItemInput));
             console.log('Results:', JSON.stringify(results));
@@ -90,7 +92,7 @@ export async function handler(event: APIGatewayProxyEvent): Promise<APIGatewayPr
                 body: JSON.stringify(results),
             };
         } catch (error) {
-            throw new Error('Internal server error when updating item: ' + JSON.stringify(error));
+            throw new Error('Internal server error when updating item: ' + error);
         }
        
     } catch (error) {
@@ -146,7 +148,13 @@ function ObjectToDynamo(obj: any): any {
             } else if (typeof element === 'boolean') {
                 result[key] = { BOOL: element };
             } else if (Array.isArray(element)) {
-                result[key] = { L: element.map((item: any) => ObjectToDynamo(item)) };
+                result[key] = { L: element.map((item: any) => {
+                    if (typeof item === 'object'){
+                        return { M: ObjectToDynamo(item) }
+                    }
+                    return ObjectToDynamo(item) 
+                })
+            };
             } else if (typeof element === 'object') {
                 result[key] = { M: ObjectToDynamo(element) };
             }
