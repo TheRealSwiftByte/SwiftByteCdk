@@ -42,11 +42,31 @@ export async function handler(event: APIGatewayProxyEvent): Promise<APIGatewayPr
         if (results.$metadata.httpStatusCode !== 200) {
             throw new Error('Internal server error when reading from table: ' + JSON.stringify(results));
         }
-        
 
+        if (!results.Responses || results.Responses.length === 0) {
+            console.error('No items found');
+            return {
+                statusCode: 404,
+                body: JSON.stringify({ message: 'No items found' }),
+            };
+        }
+
+        if (results.Responses.length > 1) {
+            console.error('Multiple items found, this should not happen');
+            return {
+                statusCode: 400,
+                body: JSON.stringify({ message: 'Multiple items found, this should not happen' }),
+            };
+        }
+
+        const dynamoItem = results.Responses[0].Item;
+        const parsedItem = DynamoToObject(dynamoItem);
+
+        console.log("Returned item: ", parsedItem);
+        
         return {
             statusCode: 200,
-            body: JSON.stringify(results),
+            body: JSON.stringify(parsedItem),
         };
     } catch (error) {
         // Handle any errors that occur during processing
@@ -57,4 +77,25 @@ export async function handler(event: APIGatewayProxyEvent): Promise<APIGatewayPr
             body: JSON.stringify({ message: 'Internal Server Error: ' + error}),
         };
     }
+}
+
+function DynamoToObject(dynamo:any):any {
+    let result: Record<string, any> = {};
+    for (const key in dynamo) {
+        if (dynamo.hasOwnProperty(key)) {
+            const element = dynamo[key];
+            if (element.S) {
+                result[key] = element.S;
+            } else if (element.N) {
+                result[key] = Number(element.N);
+            } else if (element.BOOL) {
+                result[key] = element.BOOL;
+            } else if (element.L) {
+                result[key] = element.L.map((item: any) => DynamoToObject(item));
+            } else if (element.M) {
+                result[key] = DynamoToObject(element.M);
+            }
+        }
+    }
+    return result;
 }
