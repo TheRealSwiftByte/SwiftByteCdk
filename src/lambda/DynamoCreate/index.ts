@@ -109,8 +109,8 @@ function createOrder(inputObject: CreateOrderInput): Order {
 
         id: Math.random().toString(36).substring(2, 8),
         customerId: inputObject.customerId || 'default',
-        restaurantId: inputObject.restaurantId || 'default',
-        items: inputObject.items || [],
+        restaurant: inputObject.restaurant || {},
+        foodItems: inputObject.foodItems || [],
         orderStatus: inputObject.orderStatus || 'default',
         totalPrice: inputObject.totalPrice || -1,
         orderDate: Date.now(),

@@ -1,5 +1,5 @@
 export type Cart = {
-    items?: MenuItem[]
+    foodItems: MenuItem[]
     totalPrice?: number
 }
 
@@ -11,7 +11,7 @@ export type Customer = {
     phone: string;
     address?: string;
     password: string;
-    cart?: Cart;
+    cart: Cart;
 }
 
 export type CreateCustomerInput = {
@@ -57,9 +57,9 @@ export type MenuItem = {
 export type Order = {
     id: string
     customerId: string
-    restaurantId: string
-    items: MenuItem[]
-    orderStatus: "pending" | "accepted" | "declined" | "completed" | "cancelled" | "new" | "default" //default is for an errored state, should be deprecated
+    restaurant: Restaurant
+    foodItems: MenuItem[]
+    orderStatus: "pending" | "accepted" | "declined" | "completed" | "cancelled" | "new" | "default" | "delivering" | "pendingDriver" //default is for an errored state, should be deprecated
     totalPrice: number
     orderDate: number
     payment?: Payment
@@ -69,9 +69,9 @@ export type Order = {
 
 export type CreateOrderInput = {
     customerId: string
-    restaurantId: string
-    items: MenuItem[]
-    orderStatus: "pending" | "accepted" | "declined" | "completed" | "cancelled" | "new" | "default" //default is for an errored state, should be deprecated
+    restaurant: Restaurant
+    foodItems: MenuItem[]
+    orderStatus: "pending" | "accepted" | "declined" | "completed" | "cancelled" | "new" | "default" | "delivering" | "pendingDriver" //default is for an errored state, should be deprecated
     totalPrice: number
     deliveryInstruction: string
     deliveryAddress: string
@@ -79,11 +79,11 @@ export type CreateOrderInput = {
 }
 
 export type UpdateOrderInput = {
-    id?:string
+    id?: string
     customerId?: string
-    restaurantId?: string
-    items?: MenuItem[]
-    orderStatus?: "pending" | "accepted" | "declined" | "completed" | "cancelled" | "new" | "default" //default is for an errored state, should be deprecated
+    restaurant?: Restaurant
+    foodItems?: MenuItem[]
+    orderStatus?: "pending" | "accepted" | "declined" | "completed" | "cancelled" | "new" | "default" | "delivering" | "pendingDriver" //default is for an errored state, should be deprecated
     totalPrice?: number
     deliveryInstruction?: string
     deliveryAddress?: string
