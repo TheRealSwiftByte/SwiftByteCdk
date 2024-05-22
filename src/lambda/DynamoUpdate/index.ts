@@ -2,6 +2,7 @@ import { APIGatewayProxyEvent, APIGatewayProxyResult } from 'aws-lambda';
 import { DynamoDBClient, TransactWriteItemsCommand, TransactWriteItemsCommandInput, Update } from '@aws-sdk/client-dynamodb';
 import { Customer, UpdateCustomerInput, Order, UpdateOrderInput, Restaurant, UpdateRestaurantInput, Review, UpdateReviewInput } from '../../types';
 
+
 const TABLE_NAME = process.env.TABLE_NAME || '';
 
 const UpdateFunctionGenerator = {
@@ -145,35 +146,7 @@ function updateReview(inputObject: any): UpdateReviewInput {
     }
     return outputObject;
 }
-
-function ObjectToDynamo(obj: any): any {
-    let result: Record<string, any> = {};
-    for (const key in obj) {
-        if (obj.hasOwnProperty(key)) {
-            const element = obj[key];
-            if (typeof element === 'string') {
-                result[key] = { S: element };
-            } else if (typeof element === 'number') {
-                result[key] = { N: element.toString() };
-            } else if (typeof element === 'boolean') {
-                result[key] = { BOOL: element };
-            } else if (Array.isArray(element)) {
-                result[key] = { L: element.map((item: any) => {
-                    if (typeof item === 'object'){
-                        return { M: ObjectToDynamo(item) }
-                    }
-                    return ObjectToDynamo(item) 
-                })
-            };
-            } else if (typeof element === 'object') {
-                result[key] = { M: ObjectToDynamo(element) };
-            }
-        }
-    }
-    return result;
-}
-
-function DynamoToObject(dynamo:any):any {
+export function DynamoToObject(dynamo:any):any {
     let result: Record<string, any> = {};
     for (const key in dynamo) {
         if (dynamo.hasOwnProperty(key)) {
@@ -194,6 +167,33 @@ function DynamoToObject(dynamo:any):any {
                 });
             } else if (element.M) {
                 result[key] = DynamoToObject(element.M);
+            }
+        }
+    }
+    return result;
+}
+
+export function ObjectToDynamo(obj: any): any {
+    let result: Record<string, any> = {};
+    for (const key in obj) {
+        if (obj.hasOwnProperty(key)) {
+            const element = obj[key];
+            if (typeof element === 'string') {
+                result[key] = { S: element };
+            } else if (typeof element === 'number') {
+                result[key] = { N: element.toString() };
+            } else if (typeof element === 'boolean') {
+                result[key] = { BOOL: element };
+            } else if (Array.isArray(element)) {
+                result[key] = { L: element.map((item: any) => {
+                    if (typeof item === 'object'){
+                        return { M: ObjectToDynamo(item) }
+                    }
+                    return ObjectToDynamo(item) 
+                })
+            };
+            } else if (typeof element === 'object') {
+                result[key] = { M: ObjectToDynamo(element) };
             }
         }
     }

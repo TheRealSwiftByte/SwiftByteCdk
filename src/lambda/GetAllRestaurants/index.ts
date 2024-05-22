@@ -7,34 +7,23 @@ const TABLE_NAME = process.env.TABLE_NAME || '';
 export async function handler(event: APIGatewayProxyEvent): Promise<APIGatewayProxyResult> {
     try {
         console.log('Processing event: ', event);
-        const eventPayload = event;
-        const queryParamaters = eventPayload.queryStringParameters;
-
-        if (!queryParamaters){ 
-            throw new Error('No query parameters provided');
-        }
-        if(!queryParamaters.id){
-            throw new Error('No id provided');
-        }
-
-
         const client = new DynamoDBClient({ region: 'ap-southeast-2' });
 
         const orderScan: ScanCommandInput = {
             TableName: TABLE_NAME,
-            FilterExpression: 'restaurantId = :restaurantId AND dataClass = :dataClass',
+            FilterExpression: 'dataClass = :dataClass',
             ExpressionAttributeValues: {
-                ':restaurantId': { S: queryParamaters.id },
-                ':dataClass': { S: 'order' }
+                ':dataClass': { S: 'restaurant' }
             }
         };
         
         const results = await client.send(new ScanCommand(orderScan));
 
         if (!results.Items || results.Items.length === 0) {
-            throw new Error('No orders found with provided login details');
+            throw new Error('No restaurants found');
         }
 
+        //variables misleading, leaving to save time. Actually processes restaurants
         const orderDynamo = results.Items;
         const orders = orderDynamo.map((orderDynamo: any) => DynamoToObject(orderDynamo));
 
@@ -47,7 +36,6 @@ export async function handler(event: APIGatewayProxyEvent): Promise<APIGatewayPr
             throw new Error('Internal server error when reading from table: ' + JSON.stringify(results));
         }
         
-
         return {
             statusCode: 200,
             headers: {

@@ -82,6 +82,17 @@ export class SwiftByteCdkStack extends Stack {
     });
     dynamoTable.grantReadData(GetOrderByRestaurantIdLambda);
 
+    const GetAllRestaurantsLambda = new lambda.Function(this, 'SwiftByteCdkLambdaGetAllRestaurants', {
+      runtime: lambda.Runtime.NODEJS_LATEST,
+      code: lambda.Code.fromAsset('./src/lambda/GetAllRestaurants'),
+      handler: 'index.handler',
+      environment: {
+        TABLE_NAME: dynamoTable.tableName,
+      }
+    });
+
+    dynamoTable.grantReadData(GetAllRestaurantsLambda);
+
 
     dynamoTable.grantReadData(getLambda);
     dynamoTable.grantReadWriteData(postLambda);
@@ -96,6 +107,7 @@ export class SwiftByteCdkStack extends Stack {
     const GetOrderByCustomerIdLambdaIntegration = new apigateway.LambdaIntegration(GetOrderByCustomerIdLambda);
     const GetOrderByRestaurantIdLambdaIntegration = new apigateway.LambdaIntegration(GetOrderByRestaurantIdLambda);
     const RestaurantSignInLambdaIntegration = new apigateway.LambdaIntegration(RestaurantSignInLambda);
+    const GetAllRestaurantsLambdaIntegration = new apigateway.LambdaIntegration(GetAllRestaurantsLambda);
 
     const customerResource = api.root.addResource('customer');
     customerResource.addCorsPreflight({
@@ -136,6 +148,14 @@ export class SwiftByteCdkStack extends Stack {
       allowOrigins: ['*'],
       allowMethods: ['GET'],
     })
+
+    const AllRestaurantsResource = restaurantResource.addResource('all');
+    AllRestaurantsResource.addMethod('GET', GetAllRestaurantsLambdaIntegration);
+    AllRestaurantsResource.addCorsPreflight({
+      allowOrigins: ['*'],
+      allowMethods: ['GET'],
+    })
+
 
     const RestaurantSignInResource = restaurantResource.addResource('SignIn');
     RestaurantSignInResource.addCorsPreflight({

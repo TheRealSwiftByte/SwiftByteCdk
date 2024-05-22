@@ -1,4 +1,5 @@
 export type Cart = {
+    restaurant: Restaurant
     foodItems: MenuItem[]
     totalPrice?: number
 }
@@ -134,6 +135,7 @@ export type Restaurant = {
     id: string;
     categories?: FoodCategory[];
     name: string;
+    imageURI?: string;
     address: string;
     email: string;
     password: string;
@@ -150,6 +152,7 @@ export type CreateRestaurantInput = {
     password: string;
     address: string;
     phone: string;
+    imageURI?: string;
     description: string;
     menu: MenuItem[];
     categories?: FoodCategory[];
@@ -165,6 +168,7 @@ export type UpdateRestaurantInput = {
     address?: string;
     phone?: string;
     description?: string;
+    imageURI?: string;
     menu?: MenuItem[];
     categories?: FoodCategory[];
     averageRating?: number;
