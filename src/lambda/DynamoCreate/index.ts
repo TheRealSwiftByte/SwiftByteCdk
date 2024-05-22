@@ -93,6 +93,11 @@ export async function handler(event: APIGatewayProxyEvent, context: Context): Pr
         return {
             statusCode: 500,
             body: JSON.stringify({ message: 'Internal server error', error: error }),
+            headers: {
+                'Access-Control-Allow-Origin': '*',
+                'Access-Control-Allow-Headers': 'Content-Type,X-Amz-Date,Authorization,X-Api-Key,X-Amz-Security-Token,X-Amz-User-Agent',
+                'Access-Control-Allow-Methods': 'GET'
+            },
         };
     }
 }
@@ -114,6 +119,7 @@ function createOrder(inputObject: CreateOrderInput): Order {
 
         id: Math.random().toString(36).substring(2, 8),
         customerId: inputObject.customerId || 'default',
+        customer: inputObject.customer || {},
         restaurant: inputObject.restaurant || {},
         foodItems: inputObject.foodItems || [],
         orderStatus: inputObject.orderStatus || 'default',

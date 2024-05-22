@@ -27,6 +27,7 @@ export async function handler(event: APIGatewayProxyEvent): Promise<APIGatewayPr
             TableName: TABLE_NAME,
             FilterExpression: 'email = :email AND password = :password',
             ExpressionAttributeValues: {
+                ":dataClass": {S: "restaurant"},
                 ':email': { S: queryParamaters.email },
                 ':password': { S: queryParamaters.password }
             }
@@ -69,6 +70,11 @@ export async function handler(event: APIGatewayProxyEvent): Promise<APIGatewayPr
         return {
             statusCode: 500,
             body: JSON.stringify({ message: 'Internal Server Error: ' + error}),
+            headers: {
+                'Access-Control-Allow-Origin': '*',
+                'Access-Control-Allow-Headers': 'Content-Type,X-Amz-Date,Authorization,X-Api-Key,X-Amz-Security-Token,X-Amz-User-Agent',
+                'Access-Control-Allow-Methods': 'GET'
+            },
         };
     }
 }

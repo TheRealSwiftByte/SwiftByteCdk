@@ -132,7 +132,7 @@ export class SwiftByteCdkStack extends Stack {
     })
     const orderByRestaurantIdResource = restaurantResource.addResource('fetch');
     orderByRestaurantIdResource.addMethod('GET', GetOrderByRestaurantIdLambdaIntegration);
-    orderByIdResource.addCorsPreflight({
+    orderByRestaurantIdResource.addCorsPreflight({
       allowOrigins: ['*'],
       allowMethods: ['GET'],
     })
