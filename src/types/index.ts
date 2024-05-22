@@ -5,33 +5,40 @@ export type Cart = {
 
 export type Customer = {
     id: string;
+    membership: "ByteElite" | "Standard";
     firstName: string;
     lastName: string;
     email: string;
     phone: string;
     address?: string;
     password: string;
+    profileURI?: string;
     cart: Cart;
 }
 
 export type CreateCustomerInput = {
     firstName: string;
     lastName: string;
+    membership: "ByteElite" | "Standard";
     email: string;
     phone: string;
     password: string;
     address?: string;
+    profileURI?: string;
+    isElite?: boolean;
     cart?: Cart;
 }
 
 export type UpdateCustomerInput = {
     id?: string;
     firstName?: string;
+    membership?: "ByteElite" | "Standard";
     lastName?: string;
     email?: string;
     phone?: string;
     password?: string;
     address?: string;
+    profileURI?: string;
     cart?: Cart;
 }
 
@@ -124,6 +131,8 @@ export type Restaurant = {
     categories?: FoodCategory[];
     name: string;
     address: string;
+    email: string;
+    password: string;
     phone: string;
     averageRating?: number;
     averageWaitTime?: number;
@@ -133,6 +142,8 @@ export type Restaurant = {
 
 export type CreateRestaurantInput = {
     name: string;
+    email: string;
+    password: string;
     address: string;
     phone: string;
     description: string;
@@ -144,6 +155,8 @@ export type CreateRestaurantInput = {
 
 export type UpdateRestaurantInput = {
     id?: string;
+    email?: string;
+    password?: string;
     name?: string;
     address?: string;
     phone?: string;

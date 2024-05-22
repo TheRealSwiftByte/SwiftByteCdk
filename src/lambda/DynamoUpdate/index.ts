@@ -175,7 +175,13 @@ function DynamoToObject(dynamo:any):any {
             } else if (element.BOOL) {
                 result[key] = element.BOOL;
             } else if (element.L) {
-                result[key] = element.L.map((item: any) => DynamoToObject(item));
+                result[key] = element.L.map((item: any) => {
+                    if (item.M){
+                        return DynamoToObject(item.M);
+                    } else {
+                        return DynamoToObject(item);
+                    }
+                });
             } else if (element.M) {
                 result[key] = DynamoToObject(element.M);
             }

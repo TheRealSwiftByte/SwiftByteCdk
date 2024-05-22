@@ -51,7 +51,17 @@ export class SwiftByteCdkStack extends Stack {
     });
     dynamoTable.grantReadData(CustomerSignInLambda);
 
-    const GetOrderByCustomerIdLambda = new lambda.Function(this, 'SwiftByteCdkLambdaGetOrderById', {
+    const RestaurantSignInLambda = new lambda.Function(this, 'SwiftByteCdkLambdaRestaurantSignIn', {
+      runtime: lambda.Runtime.NODEJS_LATEST,
+      code: lambda.Code.fromAsset('./src/lambda/RestaurantSignIn'),
+      handler: 'index.handler',
+      environment: {
+        TABLE_NAME: dynamoTable.tableName,
+      }
+    });
+    dynamoTable.grantReadData(RestaurantSignInLambda);
+
+    const GetOrderByCustomerIdLambda = new lambda.Function(this, 'SwiftByteCdkLambdaGetOrderByCId', {
       runtime: lambda.Runtime.NODEJS_LATEST,
       code: lambda.Code.fromAsset('./src/lambda/GetOrderByCustomerId'),
       handler: 'index.handler',
@@ -60,6 +70,18 @@ export class SwiftByteCdkStack extends Stack {
       }
     });
     dynamoTable.grantReadData(GetOrderByCustomerIdLambda);
+
+
+    const GetOrderByRestaurantIdLambda = new lambda.Function(this, 'SwiftByteCdkLambdaGetOrderByRId', {
+      runtime: lambda.Runtime.NODEJS_LATEST,
+      code: lambda.Code.fromAsset('./src/lambda/GetOrderByRestaurantId'),
+      handler: 'index.handler',
+      environment: {
+        TABLE_NAME: dynamoTable.tableName,
+      }
+    });
+    dynamoTable.grantReadData(GetOrderByRestaurantIdLambda);
+
 
     dynamoTable.grantReadData(getLambda);
     dynamoTable.grantReadWriteData(postLambda);
@@ -72,26 +94,62 @@ export class SwiftByteCdkStack extends Stack {
     const updateLambdaIntegration = new apigateway.LambdaIntegration(updateLambda);
     const CustomerSignInLambdaIntegration = new apigateway.LambdaIntegration(CustomerSignInLambda);
     const GetOrderByCustomerIdLambdaIntegration = new apigateway.LambdaIntegration(GetOrderByCustomerIdLambda);
+    const GetOrderByRestaurantIdLambdaIntegration = new apigateway.LambdaIntegration(GetOrderByRestaurantIdLambda);
+    const RestaurantSignInLambdaIntegration = new apigateway.LambdaIntegration(RestaurantSignInLambda);
 
     const customerResource = api.root.addResource('customer');
+    customerResource.addCorsPreflight({
+      allowOrigins: ['*'],
+      allowMethods: ['GET', 'POST', 'PUT'],
+    })
     customerResource.addMethod('GET', getLambdaIntegration);
     customerResource.addMethod('POST', postLambdaIntegration);
     customerResource.addMethod('PUT', updateLambdaIntegration);
 
     const orderResource = api.root.addResource('order');
+    orderResource.addCorsPreflight({
+      allowOrigins: ['*'],
+      allowMethods: ['GET'],
+    })
     orderResource.addMethod('GET', getLambdaIntegration);
     orderResource.addMethod('POST', postLambdaIntegration);
     orderResource.addMethod('PUT', updateLambdaIntegration);
 
     const orderByIdResource = orderResource.addResource('fetch');
+    // orderByIdResource.addCorsPreflight({
+    //   allowOrigins: ['*'],
+    //   allowMethods: ['GET'],
+    // })
     orderByIdResource.addMethod('GET', GetOrderByCustomerIdLambdaIntegration);
 
     const restaurantResource = api.root.addResource('restaurant');
     restaurantResource.addMethod('GET', getLambdaIntegration);
     restaurantResource.addMethod('POST', postLambdaIntegration);
     restaurantResource.addMethod('PUT', updateLambdaIntegration);
+    restaurantResource.addCorsPreflight({
+      allowOrigins: ['*'],
+      allowMethods: ['GET', 'POST', 'PUT'],
+    })
+    const orderByRestaurantIdResource = restaurantResource.addResource('fetch');
+    orderByRestaurantIdResource.addMethod('GET', GetOrderByRestaurantIdLambdaIntegration);
+    orderByIdResource.addCorsPreflight({
+      allowOrigins: ['*'],
+      allowMethods: ['GET'],
+    })
+
+    const RestaurantSignInResource = restaurantResource.addResource('SignIn');
+    RestaurantSignInResource.addCorsPreflight({
+      allowOrigins: ['*'],
+      allowMethods: ['GET'],
+    })
+    RestaurantSignInResource.addMethod('GET', RestaurantSignInLambdaIntegration);
+
 
     const CustomerSignInResource = customerResource.addResource('SignIn');
+    CustomerSignInResource.addCorsPreflight({
+      allowOrigins: ['*'],
+      allowMethods: ['GET'],
+    })
     CustomerSignInResource.addMethod('GET', CustomerSignInLambdaIntegration);
 
     // const MenuItemResource = restaurantResource.addResource('menuitem');
@@ -99,6 +157,10 @@ export class SwiftByteCdkStack extends Stack {
     // MenuItemResource.addMethod('POST', postLambdaIntegration);
     // MenuItemResource.addMethod('PUT', updateLambdaIntegration);
 
+    const reviewResource = api.root.addResource('review');
+    reviewResource.addMethod('GET', getLambdaIntegration);
+    reviewResource.addMethod('POST', postLambdaIntegration);
+    reviewResource.addMethod('PUT', updateLambdaIntegration);
 
   }
 }
