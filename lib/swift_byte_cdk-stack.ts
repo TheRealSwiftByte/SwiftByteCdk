@@ -140,7 +140,7 @@ export class SwiftByteCdkStack extends Stack {
     const RestaurantSignInResource = restaurantResource.addResource('SignIn');
     RestaurantSignInResource.addCorsPreflight({
       allowOrigins: ['*'],
-      allowMethods: ['GET'],
+      allowMethods: apigateway.Cors.ALL_METHODS,
     })
     RestaurantSignInResource.addMethod('GET', RestaurantSignInLambdaIntegration);
 
